@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "claude-mouse": {
+      "command": "C:\\Users\\Admin\\Documents\\Workspace\\claude-mouse-mcp\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "claude_mouse_mcp.server"]
+    }
+  }
+}

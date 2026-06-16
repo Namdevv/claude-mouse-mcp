@@ -1,0 +1,21 @@
+[project]
+name = "claude-mouse-mcp"
+version = "0.1.0"
+description = "MCP server cho phép Claude xem màn hình và điều khiển chuột/bàn phím trên Windows"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]>=1.2.0",
+    "pyautogui>=0.9.54",
+    "mss>=9.0.1",
+    "Pillow>=10.0.0",
+]
+
+[project.scripts]
+claude-mouse-mcp = "claude_mouse_mcp.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claude_mouse_mcp"]

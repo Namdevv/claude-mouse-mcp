@@ -2,6 +2,8 @@
 name = "claude-mouse-mcp"
 version = "0.1.0"
 description = "MCP server cho phép Claude xem màn hình và điều khiển chuột/bàn phím trên Windows"
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.10"
 dependencies = [
     "mcp[cli]>=1.2.0",

@@ -5,11 +5,38 @@ description = "MCP server that lets Claude see the screen and control the mouse/
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
+authors = [
+    { name = "Nam TRAN", email = "namtran34311@gmail.com" },
+]
+keywords = ["mcp", "claude", "pyautogui", "automation", "mouse", "keyboard", "screenshot", "windows"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Utilities",
+]
 dependencies = [
     "mcp[cli]>=1.2.0",
     "pyautogui>=0.9.54",
     "mss>=9.0.1",
     "Pillow>=10.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Namdevv/claude-mouse-mcp"
+Repository = "https://github.com/Namdevv/claude-mouse-mcp"
+Issues = "https://github.com/Namdevv/claude-mouse-mcp/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
 ]
 
 [project.scripts]
@@ -21,3 +48,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/claude_mouse_mcp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

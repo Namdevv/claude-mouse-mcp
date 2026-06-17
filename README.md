@@ -7,6 +7,7 @@
   <img alt="Python" src="https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white">
   <img alt="MCP" src="https://img.shields.io/badge/MCP-stdio-6E40C9">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
+  <img alt="CI" src="https://github.com/Namdevv/claude-mouse-mcp/actions/workflows/ci.yml/badge.svg">
 </p>
 
 Claude works in a **see → decide → act → verify** loop:
@@ -200,8 +201,12 @@ Restart Codex. Verify with `codex mcp list`.
 
 ## 🤝 Contributing
 
-Pull requests and issues are welcome. Open an issue at
+Pull requests and issues are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for
+the dev setup and guidelines, and please follow the
+[Code of Conduct](CODE_OF_CONDUCT.md). Open an issue at
 [github.com/Namdevv/claude-mouse-mcp/issues](https://github.com/Namdevv/claude-mouse-mcp/issues).
+
+Notable changes are tracked in the [CHANGELOG](CHANGELOG.md).
 
 ## 📄 License
 

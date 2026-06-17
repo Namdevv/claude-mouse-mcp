@@ -1,7 +1,7 @@
 [project]
 name = "claude-mouse-mcp"
 version = "0.1.0"
-description = "MCP server cho phép Claude xem màn hình và điều khiển chuột/bàn phím trên Windows"
+description = "MCP server that lets Claude see the screen and control the mouse/keyboard on Windows"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"

@@ -1,12 +1,12 @@
 """
 Claude Mouse MCP server.
 
-Cung cấp cho Claude khả năng:
-  - Nhìn màn hình  (screenshot, get_screen_size, get_cursor_position)
-  - Điều khiển chuột (move_mouse, click, drag, scroll)
-  - Điều khiển bàn phím (type_text, press_key)
+Gives Claude the ability to:
+  - See the screen      (screenshot, get_screen_size, get_cursor_position)
+  - Control the mouse   (move_mouse, click, drag, scroll)
+  - Control the keyboard (type_text, press_key)
 
-Chạy qua stdio transport => dùng được cho cả Claude Desktop lẫn Claude Code.
+Runs over the stdio transport => works with both Claude Desktop and Claude Code.
 """
 
 from __future__ import annotations
@@ -15,10 +15,11 @@ import io
 import sys
 import time
 
-# --- Bật DPI awareness TRƯỚC khi import pyautogui ---------------------------
-# Trên Windows nếu scale màn hình != 100% (vd 125%, 150%) thì toạ độ logic và
-# pixel thật bị lệch -> Claude click sai chỗ. Bật DPI-aware để pyautogui.size()
-# và ảnh chụp dùng CÙNG hệ toạ độ pixel vật lý.
+# --- Enable DPI awareness BEFORE importing pyautogui -----------------------
+# On Windows, if the display scale != 100% (e.g. 125%, 150%) the logical and
+# physical pixel coordinates diverge -> Claude clicks the wrong spot. Enabling
+# DPI awareness makes pyautogui.size() and the screenshot use the SAME physical
+# pixel coordinate system.
 if sys.platform == "win32":
     try:
         import ctypes
@@ -34,29 +35,30 @@ if sys.platform == "win32":
 import pyautogui
 from mcp.server.fastmcp import FastMCP, Image
 
-# An toàn: di chuột vào 1 trong 4 góc màn hình sẽ raise FailSafeException,
-# dừng ngay mọi hành động đang chạy. Đây là "phanh tay" thủ công.
+# Safety: moving the mouse into one of the 4 screen corners raises a
+# FailSafeException, immediately stopping any running action. This is the manual
+# "emergency brake".
 pyautogui.FAILSAFE = True
-# Delay nhỏ sau mỗi lệnh để UI kịp phản hồi.
+# Small delay after each command so the UI has time to respond.
 pyautogui.PAUSE = 0.05
 
 mcp = FastMCP("claude-mouse")
 
-# Giới hạn bề rộng ảnh gửi cho Claude để tiết kiệm token (ảnh full-HD rất nặng).
+# Cap the width of images sent to Claude to save tokens (full-HD images are heavy).
 MAX_SCREENSHOT_WIDTH = 1280
 
-# Thời gian (giây) chuột lướt tới vị trí đích -> đủ chậm để nhìn thấy chuyển động.
+# Time (seconds) for the cursor to glide to the target -> slow enough to see the motion.
 MOVE_DURATION = 0.6
-# Hàm easing: tăng/giảm tốc tự nhiên giống tay người, dễ nhìn hơn tuyến tính.
+# Easing function: natural ease-in/ease-out like a human hand, easier to follow than linear.
 TWEEN = pyautogui.easeInOutQuad
 
 
 def _grab_png(region: tuple[int, int, int, int] | None = None,
               max_width: int = MAX_SCREENSHOT_WIDTH) -> tuple[bytes, int, int, float]:
-    """Chụp màn hình -> (PNG bytes, rộng_ảnh, cao_ảnh, scale).
+    """Capture the screen -> (PNG bytes, image_width, image_height, scale).
 
-    scale = pixel_màn_hình / pixel_ảnh. Nhân toạ độ-trên-ảnh với scale để ra
-    toạ độ màn hình thật dùng cho click.
+    scale = screen_pixels / image_pixels. Multiply an in-image coordinate by
+    scale to get the real screen coordinate used for clicking.
     """
     img = pyautogui.screenshot(region=region)
     orig_w = img.width
@@ -70,23 +72,23 @@ def _grab_png(region: tuple[int, int, int, int] | None = None,
 
 
 # --------------------------------------------------------------------------
-#  NHÌN MÀN HÌNH
+#  SEE THE SCREEN
 # --------------------------------------------------------------------------
 @mcp.tool()
 def get_screen_size() -> str:
-    """Trả về kích thước màn hình (chiều rộng x chiều cao, đơn vị pixel).
+    """Return the screen size (width x height, in pixels).
 
-    Gọi tool này trước khi tính toạ độ click để biết phạm vi hợp lệ.
+    Call this before computing click coordinates to know the valid range.
     """
     w, h = pyautogui.size()
-    return f"Kích thước màn hình: {w} x {h} pixel"
+    return f"Screen size: {w} x {h} pixels"
 
 
 @mcp.tool()
 def get_cursor_position() -> str:
-    """Trả về toạ độ (x, y) hiện tại của con trỏ chuột."""
+    """Return the current (x, y) coordinates of the mouse cursor."""
     x, y = pyautogui.position()
-    return f"Vị trí chuột hiện tại: x={x}, y={y}"
+    return f"Current cursor position: x={x}, y={y}"
 
 
 @mcp.tool()
@@ -97,46 +99,47 @@ def screenshot(
     width: int = 0,
     height: int = 0,
 ) -> list:
-    """Chụp ảnh màn hình để Claude nhìn được nội dung đang hiển thị.
+    """Capture a screenshot so Claude can see what is currently displayed.
 
-    - full_screen=True: chụp toàn màn hình (mặc định).
-    - full_screen=False: chụp 1 vùng chữ nhật xác định bởi left/top/width/height.
+    - full_screen=True: capture the entire screen (default).
+    - full_screen=False: capture a rectangular region defined by left/top/width/height.
 
-    QUAN TRỌNG về toạ độ: ảnh trả về có thể đã bị THU NHỎ để tiết kiệm token.
-    Kèm theo ảnh là dòng chú thích cho biết kích thước ảnh, kích thước màn hình
-    thật và hệ số 'scale'. Toạ độ click PHẢI tính theo PIXEL MÀN HÌNH THẬT:
-        x_thật = x_trên_ảnh * scale   (cộng thêm 'left'/'top' nếu chụp 1 vùng)
-    Dùng tool này sau mỗi hành động để xác nhận kết quả trước khi làm bước tiếp.
+    IMPORTANT about coordinates: the returned image may have been SCALED DOWN to
+    save tokens. The image comes with a note describing the image size, the real
+    screen size and the 'scale' factor. Click coordinates MUST be computed in
+    REAL SCREEN PIXELS:
+        real_x = image_x * scale   (plus 'left'/'top' when capturing a region)
+    Use this tool after each action to confirm the result before the next step.
     """
     region = None
     ox, oy = 0, 0
     if not full_screen:
         if width <= 0 or height <= 0:
-            raise ValueError("Khi full_screen=False phải cung cấp width và height > 0")
+            raise ValueError("When full_screen=False you must provide width and height > 0")
         region = (left, top, width, height)
         ox, oy = left, top
     png, img_w, img_h, scale = _grab_png(region)
     screen_w, screen_h = pyautogui.size()
     note = (
-        f"[Thông tin toạ độ] Ảnh: {img_w}x{img_h}px | "
-        f"Màn hình thật: {screen_w}x{screen_h}px | scale={scale:.3f}. "
-        f"Đổi toạ độ: x_thật = x_ảnh*{scale:.3f} + {ox}, "
-        f"y_thật = y_ảnh*{scale:.3f} + {oy}. Click theo toạ độ THẬT."
+        f"[Coordinate info] Image: {img_w}x{img_h}px | "
+        f"Real screen: {screen_w}x{screen_h}px | scale={scale:.3f}. "
+        f"Convert coordinates: real_x = image_x*{scale:.3f} + {ox}, "
+        f"real_y = image_y*{scale:.3f} + {oy}. Click using REAL coordinates."
     )
     return [note, Image(data=png, format="png")]
 
 
 # --------------------------------------------------------------------------
-#  ĐIỀU KHIỂN CHUỘT
+#  MOUSE CONTROL
 # --------------------------------------------------------------------------
 @mcp.tool()
 def move_mouse(x: int, y: int, duration: float = MOVE_DURATION) -> str:
-    """Di chuyển con trỏ chuột tới toạ độ (x, y) — chuột LƯỚT mượt để nhìn thấy.
+    """Move the cursor to (x, y) — the mouse GLIDES smoothly so the motion is visible.
 
-    duration = số giây để di chuyển. Đặt 0 nếu muốn nhảy tức thì (không khuyến khích).
+    duration = number of seconds for the movement. Set to 0 for an instant jump (not recommended).
     """
     pyautogui.moveTo(x, y, duration=duration, tween=TWEEN)
-    return f"Đã di chuột tới ({x}, {y})"
+    return f"Moved cursor to ({x}, {y})"
 
 
 @mcp.tool()
@@ -147,23 +150,23 @@ def click(
     clicks: int = 1,
     duration: float = MOVE_DURATION,
 ) -> str:
-    """Click chuột tại (x, y). Nếu không truyền toạ độ thì click tại vị trí hiện tại.
+    """Click the mouse at (x, y). If no coordinates are given, click at the current position.
 
-    Chuột sẽ LƯỚT mượt tới (x, y) (nhìn thấy được) rồi mới click — không nhảy "bụp".
+    The mouse GLIDES smoothly to (x, y) (visibly) before clicking — no instant jump.
     - button: "left" | "right" | "middle"
     - clicks: 1 = single click, 2 = double click
-    - duration: số giây chuột lướt tới đích.
+    - duration: number of seconds for the glide to the target.
     """
     if button not in ("left", "right", "middle"):
-        raise ValueError("button phải là 'left', 'right' hoặc 'middle'")
+        raise ValueError("button must be 'left', 'right' or 'middle'")
     if x >= 0 and y >= 0:
-        # Lướt tới đích trước cho người dùng nhìn thấy, rồi click tại chỗ.
+        # Glide to the target first so the user can see it, then click in place.
         pyautogui.moveTo(x, y, duration=duration, tween=TWEEN)
-        where = f"tại ({x}, {y})"
+        where = f"at ({x}, {y})"
     else:
-        where = "tại vị trí hiện tại"
+        where = "at the current position"
     pyautogui.click(clicks=clicks, button=button, interval=0.1)
-    return f"Đã {clicks}-click chuột {button} {where}"
+    return f"Performed {clicks}-click with {button} button {where}"
 
 
 @mcp.tool()
@@ -175,55 +178,55 @@ def drag(
     button: str = "left",
     duration: float = 0.8,
 ) -> str:
-    """Kéo–thả: nhấn giữ chuột tại (from_x, from_y) rồi kéo tới (to_x, to_y) và thả."""
+    """Drag and drop: press and hold the mouse at (from_x, from_y), drag to (to_x, to_y) and release."""
     pyautogui.moveTo(from_x, from_y, duration=MOVE_DURATION, tween=TWEEN)
     pyautogui.dragTo(to_x, to_y, duration=duration, button=button, tween=TWEEN)
-    return f"Đã kéo từ ({from_x}, {from_y}) tới ({to_x}, {to_y})"
+    return f"Dragged from ({from_x}, {from_y}) to ({to_x}, {to_y})"
 
 
 @mcp.tool()
 def scroll(amount: int, x: int = -1, y: int = -1) -> str:
-    """Cuộn chuột. amount > 0 = cuộn lên, amount < 0 = cuộn xuống.
+    """Scroll the mouse wheel. amount > 0 = scroll up, amount < 0 = scroll down.
 
-    Có thể truyền (x, y) để di chuột tới đó trước khi cuộn.
+    You may pass (x, y) to move the mouse there before scrolling.
     """
     if x >= 0 and y >= 0:
         pyautogui.moveTo(x, y, duration=MOVE_DURATION, tween=TWEEN)
     pyautogui.scroll(amount)
-    return f"Đã cuộn {amount} đơn vị ({'lên' if amount > 0 else 'xuống'})"
+    return f"Scrolled {amount} units ({'up' if amount > 0 else 'down'})"
 
 
 # --------------------------------------------------------------------------
-#  ĐIỀU KHIỂN BÀN PHÍM
+#  KEYBOARD CONTROL
 # --------------------------------------------------------------------------
 @mcp.tool()
 def type_text(text: str, interval: float = 0.02) -> str:
-    """Gõ một đoạn văn bản như gõ bàn phím. interval = giây giữa mỗi ký tự."""
+    """Type a piece of text as if typing on the keyboard. interval = seconds between each character."""
     pyautogui.write(text, interval=interval)
-    return f"Đã gõ {len(text)} ký tự"
+    return f"Typed {len(text)} characters"
 
 
 @mcp.tool()
 def press_key(keys: str) -> str:
-    """Nhấn phím hoặc tổ hợp phím tắt.
+    """Press a key or a keyboard shortcut combination.
 
-    - Một phím: "enter", "esc", "tab", "f5", "delete"...
-    - Tổ hợp: dùng dấu "+", ví dụ "ctrl+c", "ctrl+shift+esc", "alt+f4".
-    Danh sách tên phím theo quy ước pyautogui (vd: ctrl, alt, shift, win, enter).
+    - Single key: "enter", "esc", "tab", "f5", "delete"...
+    - Combination: use "+", e.g. "ctrl+c", "ctrl+shift+esc", "alt+f4".
+    Key names follow the pyautogui convention (e.g. ctrl, alt, shift, win, enter).
     """
     parts = [k.strip().lower() for k in keys.split("+") if k.strip()]
     if not parts:
-        raise ValueError("Chuỗi phím rỗng")
+        raise ValueError("Empty key string")
     if len(parts) == 1:
         pyautogui.press(parts[0])
     else:
         pyautogui.hotkey(*parts)
-    return f"Đã nhấn: {keys}"
+    return f"Pressed: {keys}"
 
 
 # --------------------------------------------------------------------------
 def main() -> None:
-    """Entry point: chạy server qua stdio."""
+    """Entry point: run the server over stdio."""
     mcp.run()
 
 

@@ -22,6 +22,16 @@ Runs over the **stdio transport**, so it works with **Claude Code (CLI)**, **Cla
 
 ---
 
+## 🎬 Demo
+
+https://github.com/Namdevv/claude-mouse-mcp/raw/main/docs/demo.mp4
+
+<video src="https://github.com/Namdevv/claude-mouse-mcp/raw/main/docs/demo.mp4" controls width="100%"></video>
+
+> ▶️ If the player above doesn't load, [click here to watch the demo](docs/demo.mp4).
+
+---
+
 ## ✨ Features
 
 - 👁️ **See the screen** — capture the full screen or a region and send the image straight to Claude.
@@ -30,6 +40,23 @@ Runs over the **stdio transport**, so it works with **Claude Code (CLI)**, **Cla
 - 🎯 **DPI-aware** — click coordinates match real pixels even when the display is scaled to 125% / 150%.
 - 🪙 **Token-friendly** — images are auto-scaled down to a max width of 1280px.
 - 🛑 **Emergency brake** — fling the mouse into a screen corner to stop every action instantly.
+
+## 💬 Example prompts
+
+Once the server is connected, just talk to Claude in natural language — it will
+take a screenshot, figure out the coordinates, and act. Try things like:
+
+- _"Take a screenshot and tell me what's on my screen right now."_
+- _"Open the Start menu, search for **Notepad**, and open it."_
+- _"In the open window, type 'Hello from Claude' then save the file as notes.txt on the Desktop."_
+- _"Find the Chrome icon on the taskbar and click it, then go to github.com."_
+- _"Scroll down this page until you see the **Pricing** section."_
+- _"Select all the text in this field (ctrl+a), copy it, and tell me what it says."_
+- _"Close the active window with alt+f4."_
+- _"Drag the file on the left into the folder on the right."_
+
+> 💡 Tip: ask Claude to **screenshot and verify after each step** for the most
+> reliable results — that's the see → act → verify loop it's built around.
 
 ## 📋 Requirements
 

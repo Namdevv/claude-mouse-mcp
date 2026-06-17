@@ -17,7 +17,7 @@ screenshot ──▶ (Claude analyzes) ──▶ move_mouse / click / type_text 
    └──────────────────────────────  repeat  ───────────────────────────────┘
 ```
 
-Runs over the **stdio transport**, so it works with both **Claude Code (CLI)** and **Claude Desktop**.
+Runs over the **stdio transport**, so it works with **Claude Code (CLI)**, **Claude Desktop**, and **Codex CLI**.
 
 ---
 
@@ -36,7 +36,7 @@ Runs over the **stdio transport**, so it works with both **Claude Code (CLI)** a
 |-----------|---------|
 | Operating system | Windows 10 / 11 |
 | Python | 3.10 or newer |
-| Claude | [Claude Code (CLI)](https://docs.claude.com/en/docs/claude-code) or Claude Desktop |
+| Client | [Claude Code (CLI)](https://docs.claude.com/en/docs/claude-code), Claude Desktop, or Codex CLI |
 
 ## 🚀 Quick install (NO clone needed)
 
@@ -133,6 +133,31 @@ Open the config file `%APPDATA%\Claude\claude_desktop_config.json` and add the b
 ```
 
 Restart Claude Desktop.
+
+### Connect Codex CLI
+
+Codex CLI also speaks MCP. Either register it with one command (Codex ≥ 0.20):
+
+```powershell
+codex mcp add claude-mouse -- uvx --from git+https://github.com/Namdevv/claude-mouse-mcp.git claude-mouse-mcp
+```
+
+Or add the server manually to `~/.codex/config.toml` (`%USERPROFILE%\.codex\config.toml` on Windows):
+
+```toml
+[mcp_servers.claude-mouse]
+command = "uvx"
+args = ["--from", "git+https://github.com/Namdevv/claude-mouse-mcp.git", "claude-mouse-mcp"]
+# uvx downloads the package from GitHub on first launch — raise the startup
+# timeout so Codex doesn't give up while it builds the environment.
+startup_timeout_sec = 120
+```
+
+Restart Codex. Verify with `codex mcp list`.
+
+> Want the editable/local install instead? Point `command` at your venv Python:
+> `command = "C:\\path\\to\\claude-mouse-mcp\\.venv\\Scripts\\python.exe"` with
+> `args = ["-m", "claude_mouse_mcp.server"]`.
 
 ## 🛠️ Tool list
 

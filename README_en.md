@@ -71,8 +71,16 @@ take a screenshot, figure out the coordinates, and act. Try things like:
 Just one command in PowerShell — the script installs [`uv`](https://docs.astral.sh/uv/) (if missing), registers the MCP server via `uvx`, and grants auto-approve permissions:
 
 ```powershell
-irm https://raw.githubusercontent.com/Namdevv/claude-mouse-mcp/main/install-remote.ps1 | iex
+powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Namdevv/claude-mouse-mcp/main/install-remote.ps1 | iex"
 ```
+
+Please check claude mcp with:
+
+```powershell
+/mcp list
+```
+
+-> Claude-mouse is connected it done, If not connect please select tool enter and click reconnect -> Done 
 
 `uvx` **downloads the package from GitHub** into an isolated cached environment — no `git clone`, no manual `.venv`. The first time Claude starts the server it will be a little slow while uvx fetches the package.
 

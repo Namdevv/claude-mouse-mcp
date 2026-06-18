@@ -76,6 +76,13 @@ powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.c
 
 `uvx` **tải package từ GitHub** về một môi trường cache độc lập — không cần `git clone`, không cần tạo `.venv` thủ công. Lần đầu Claude khởi động server sẽ hơi chậm trong lúc uvx tải package về.
 
+Kiểm tra claude bằng lệnh
+
+```powershell
+/mcp list
+```
+-> Nếu connect thì done, Nếu chưa chọn tool bấm reconnect -> Done
+
 Muốn tuỳ chỉnh (đổi tên, scope, hoặc ghim phiên bản), tải script về rồi chạy:
 
 ```powershell

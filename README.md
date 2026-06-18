@@ -71,7 +71,7 @@ nó sẽ tự chụp màn hình, tính toạ độ rồi thao tác. Thử vài c
 Chỉ một dòng lệnh trong PowerShell — script sẽ tự cài [`uv`](https://docs.astral.sh/uv/) (nếu thiếu), đăng ký MCP server qua `uvx` và cấp quyền auto-approve:
 
 ```powershell
-irm https://raw.githubusercontent.com/Namdevv/claude-mouse-mcp/main/install-remote.ps1 | iex
+powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Namdevv/claude-mouse-mcp/main/install-remote.ps1 | iex"
 ```
 
 `uvx` **tải package từ GitHub** về một môi trường cache độc lập — không cần `git clone`, không cần tạo `.venv` thủ công. Lần đầu Claude khởi động server sẽ hơi chậm trong lúc uvx tải package về.
